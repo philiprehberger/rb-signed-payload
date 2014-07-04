@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "spec_helper"
+
 RSpec.describe Philiprehberger::SignedPayload do
   let(:key) { "test-secret-key-123" }
   let(:data) { { "user" => "alice", "role" => "admin" } }

@@ -18,12 +18,6 @@ Add to your Gemfile:
 gem "philiprehberger-signed_payload"
 ```
 
-Then run:
-
-```bash
-bundle install
-```
-
 Or install directly:
 
 ```bash

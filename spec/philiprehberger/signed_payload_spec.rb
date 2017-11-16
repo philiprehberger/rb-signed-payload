@@ -137,5 +137,90 @@ RSpec.describe Philiprehberger::SignedPayload do
       token = described_class.sign(data, key: key)
       expect(described_class.decode(token)).to eq(data)
     end
+
+    it "raises MalformedToken for token with no dot" do
+      expect { described_class.decode("nodot") }.to raise_error(Philiprehberger::SignedPayload::MalformedToken)
+    end
+
+    it "raises MalformedToken for token with multiple dots" do
+      expect { described_class.decode("a.b.c") }.to raise_error(Philiprehberger::SignedPayload::MalformedToken)
+    end
+  end
+
+  describe "empty and edge-case payloads" do
+    it "signs and verifies an empty hash" do
+      token = described_class.sign({}, key: key)
+      expect(described_class.verify(token, key: key)).to eq({})
+    end
+
+    it "signs and verifies a nil payload" do
+      token = described_class.sign(nil, key: key)
+      expect(described_class.verify(token, key: key)).to be_nil
+    end
+
+    it "signs and verifies a string payload" do
+      token = described_class.sign("hello", key: key)
+      expect(described_class.verify(token, key: key)).to eq("hello")
+    end
+
+    it "signs and verifies an integer payload" do
+      token = described_class.sign(42, key: key)
+      expect(described_class.verify(token, key: key)).to eq(42)
+    end
+
+    it "signs and verifies an array payload" do
+      token = described_class.sign([1, 2, 3], key: key)
+      expect(described_class.verify(token, key: key)).to eq([1, 2, 3])
+    end
+
+    it "signs and verifies a large payload" do
+      large = { "data" => "x" * 10_000 }
+      token = described_class.sign(large, key: key)
+      expect(described_class.verify(token, key: key)).to eq(large)
+    end
+  end
+
+  describe "tamper detection" do
+    it "detects modified signature" do
+      token = described_class.sign(data, key: key)
+      parts = token.split(".")
+      tampered = "#{parts[0]}.#{parts[1]}AA"
+      expect { described_class.verify(tampered, key: key) }.to raise_error(
+        Philiprehberger::SignedPayload::InvalidSignature
+      )
+    end
+
+    it "detects swapped payload with valid format" do
+      token1 = described_class.sign({ "a" => 1 }, key: key)
+      token2 = described_class.sign({ "b" => 2 }, key: key)
+      parts1 = token1.split(".")
+      parts2 = token2.split(".")
+      franken = "#{parts1[0]}.#{parts2[1]}"
+      expect { described_class.verify(franken, key: key) }.to raise_error(
+        Philiprehberger::SignedPayload::InvalidSignature
+      )
+    end
+  end
+
+  describe "unsupported algorithm" do
+    it "raises ArgumentError for unknown algorithm" do
+      expect { described_class.sign(data, key: key, algorithm: :md5) }.to raise_error(ArgumentError)
+    end
+  end
+
+  describe "key sensitivity" do
+    it "fails verification with a key differing by one character" do
+      token = described_class.sign(data, key: "secret-key-A")
+      expect { described_class.verify(token, key: "secret-key-B") }.to raise_error(
+        Philiprehberger::SignedPayload::InvalidSignature
+      )
+    end
+
+    it "fails verification with empty key vs non-empty key" do
+      token = described_class.sign(data, key: "real-key")
+      expect { described_class.verify(token, key: "") }.to raise_error(
+        Philiprehberger::SignedPayload::InvalidSignature
+      )
+    end
   end
 end

@@ -3,6 +3,7 @@
 [![Tests](https://github.com/philiprehberger/rb-signed-payload/actions/workflows/ci.yml/badge.svg)](https://github.com/philiprehberger/rb-signed-payload/actions/workflows/ci.yml)
 [![Gem Version](https://badge.fury.io/rb/philiprehberger-signed_payload.svg)](https://rubygems.org/gems/philiprehberger-signed_payload)
 [![License](https://img.shields.io/github/license/philiprehberger/rb-signed-payload)](LICENSE)
+[![Sponsor](https://img.shields.io/badge/sponsor-GitHub%20Sponsors-ec6cb9)](https://github.com/sponsors/philiprehberger)
 
 Cryptographic signing and verification for JSON payloads
 
@@ -129,4 +130,4 @@ bundle exec rubocop
 
 ## License
 
-MIT
+[MIT](LICENSE)

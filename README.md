@@ -91,6 +91,26 @@ signer.valid?(token)   # => true or false
 signer.decode(token)   # => { "user_id" => 42, "role" => "admin" }
 ```
 
+### Token Refresh
+
+```ruby
+# Re-sign a verified token with a new expiration
+refreshed = Philiprehberger::SignedPayload.refresh(token, key: key, expires_in: 7200)
+```
+
+### Token Inspection
+
+```ruby
+# Check if a token has expired (without verifying signature)
+Philiprehberger::SignedPayload.expired?(token)  # => true or false
+
+# Inspect token metadata without verification
+info = Philiprehberger::SignedPayload.peek(token)
+info[:data]     # => { "user_id" => 42 }
+info[:exp]      # => 1712700000 (Unix timestamp, or nil)
+info[:expired]  # => false
+```
+
 ### Error handling
 
 ```ruby
@@ -113,11 +133,17 @@ end
 | `SignedPayload.verify(token, key:, algorithm:)` | Verify and decode token, returns data hash |
 | `SignedPayload.valid?(token, key:)` | Check signature validity, returns boolean |
 | `SignedPayload.decode(token)` | Decode payload without verification |
+| `SignedPayload.refresh(token, key:, expires_in:)` | Re-sign a token with new expiration |
+| `SignedPayload.expired?(token)` | Check if token has expired |
+| `SignedPayload.peek(token)` | Inspect token metadata without verification |
 | `Signer.new(key:, algorithm:)` | Create a signer instance |
 | `Signer#sign(data, expires_in:)` | Sign data with optional TTL |
 | `Signer#verify(token)` | Verify token or raise error |
 | `Signer#valid?(token)` | Check signature validity, returns boolean |
 | `Signer#decode(token)` | Decode payload without verification |
+| `Signer#refresh(token, expires_in:)` | Re-sign a verified token with new TTL |
+| `Signer#expired?(token)` | Check if token has expired |
+| `Signer#peek(token)` | Inspect data, exp, and expired status |
 
 ## Development
 

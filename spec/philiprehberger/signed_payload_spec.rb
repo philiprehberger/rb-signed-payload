@@ -147,6 +147,62 @@ RSpec.describe Philiprehberger::SignedPayload do
     end
   end
 
+  describe '.refresh' do
+    it 'returns a new token with the same data' do
+      token = described_class.sign(data, key: key, expires_in: 3600)
+      refreshed = described_class.refresh(token, key: key, expires_in: 7200)
+      result = described_class.verify(refreshed, key: key)
+      expect(result).to eq(data)
+    end
+
+    it 'raises for an invalid token' do
+      expect { described_class.refresh('bad.token', key: key, expires_in: 3600) }.to raise_error(
+        Philiprehberger::SignedPayload::InvalidSignature
+      )
+    end
+  end
+
+  describe '.expired?' do
+    it 'returns false for a non-expired token' do
+      token = described_class.sign(data, key: key, expires_in: 3600)
+      expect(described_class.expired?(token)).to be false
+    end
+
+    it 'returns true for an expired token' do
+      token = described_class.sign(data, key: key, expires_in: 1)
+      sleep(1.1)
+      expect(described_class.expired?(token)).to be true
+    end
+
+    it 'returns false for a token with no expiration' do
+      token = described_class.sign(data, key: key)
+      expect(described_class.expired?(token)).to be false
+    end
+  end
+
+  describe '.peek' do
+    it 'returns data and expiration metadata' do
+      token = described_class.sign(data, key: key, expires_in: 3600)
+      info = described_class.peek(token)
+      expect(info[:data]).to eq(data)
+      expect(info[:exp]).to be_a(Integer)
+      expect(info[:expired]).to be false
+    end
+
+    it 'returns nil exp for tokens without expiration' do
+      token = described_class.sign(data, key: key)
+      info = described_class.peek(token)
+      expect(info[:exp]).to be_nil
+      expect(info[:expired]).to be false
+    end
+
+    it 'works without verifying signature' do
+      token = described_class.sign(data, key: key)
+      info = described_class.peek(token)
+      expect(info[:data]).to eq(data)
+    end
+  end
+
   describe 'empty and edge-case payloads' do
     it 'signs and verifies an empty hash' do
       token = described_class.sign({}, key: key)

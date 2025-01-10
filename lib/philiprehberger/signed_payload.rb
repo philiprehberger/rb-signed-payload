@@ -21,6 +21,18 @@ module Philiprehberger
       Signer.new(key: key, algorithm: algorithm).valid?(token)
     end
 
+    def self.refresh(token, key:, expires_in:, algorithm: :sha256)
+      Signer.new(key: key, algorithm: algorithm).refresh(token, expires_in: expires_in)
+    end
+
+    def self.expired?(token)
+      Signer.new(key: 'unused').expired?(token)
+    end
+
+    def self.peek(token)
+      Signer.new(key: 'unused').peek(token)
+    end
+
     def self.decode(token)
       encoded, _sig = token.to_s.split('.')
       raise MalformedToken, 'invalid token format' unless token.to_s.split('.').length == 2

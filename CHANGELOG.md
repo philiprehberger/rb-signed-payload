@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-04-09
+
+### Added
+- `refresh(token, expires_in:)` to re-sign a verified token with a new expiration
+- `expired?(token)` to check token expiration without verifying the signature
+- `peek(token)` to inspect token metadata (data, exp, expired) without verification
+
+### Fixed
+- Deduplicate version `0.2.3` entries in CHANGELOG
+
 ## [0.2.8] - 2026-03-31
 
 ### Added
@@ -36,10 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.3] - 2026-03-22
 
 ### Changed
-
 - Expand test coverage to 30+ examples with empty/nil/large payloads, tamper detection, key sensitivity, unsupported algorithm, and decode edge cases
-
-## [0.2.3] - 2026-03-21
 
 ### Fixed
 - Standardize Installation section in README

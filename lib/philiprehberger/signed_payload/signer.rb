@@ -57,6 +57,21 @@ module Philiprehberger
         sign(data, expires_in: expires_in)
       end
 
+      # Re-sign a verified token's payload preserving the original expiration timestamp.
+      # Used internally by key rotation to avoid shifting expiry during re-signing.
+      #
+      # @param data [Object] the payload data to sign
+      # @param exp [Integer, nil] Unix timestamp to preserve (or nil for no expiry)
+      # @return [String] a new token with the given data and exp
+      def sign_with_exp(data, exp:)
+        hash = { 'data' => data }
+        hash['exp'] = exp unless exp.nil?
+        payload = JSON.generate(hash)
+        encoded = Base64.urlsafe_encode64(payload)
+        signature = compute_signature(encoded)
+        "#{encoded}.#{Base64.urlsafe_encode64(signature)}"
+      end
+
       # Check if a token has expired without verifying the signature.
       #
       # @param token [String] the token to check

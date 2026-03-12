@@ -7,8 +7,15 @@ require "base64"
 module Philiprehberger
   module SignedPayload
     class Signer
-      def initialize(key:)
+      ALGORITHMS = {
+        sha256: "SHA256",
+        sha384: "SHA384",
+        sha512: "SHA512"
+      }.freeze
+
+      def initialize(key:, algorithm: :sha256)
         @key = key
+        @algorithm = validate_algorithm!(algorithm)
       end
 
       def sign(data, expires_in: nil)
@@ -22,6 +29,21 @@ module Philiprehberger
         encoded, sig = split_token(token)
         verify_signature!(encoded, sig)
         decode_payload(encoded)
+      end
+
+      def valid?(token)
+        verify(token)
+        true
+      rescue Error
+        false
+      end
+
+      def decode(token)
+        encoded, _sig = split_token(token)
+        parsed = JSON.parse(Base64.urlsafe_decode64(encoded))
+        parsed["data"]
+      rescue JSON::ParserError
+        raise MalformedToken, "invalid payload encoding"
       end
 
       private
@@ -59,8 +81,15 @@ module Philiprehberger
         raise ExpiredToken, "token has expired" if parsed["exp"] <= Time.now.to_i
       end
 
+      def validate_algorithm!(algorithm)
+        digest = ALGORITHMS[algorithm]
+        raise ArgumentError, "unsupported algorithm: #{algorithm}" unless digest
+
+        digest
+      end
+
       def compute_signature(payload)
-        OpenSSL::HMAC.digest("SHA256", @key, payload)
+        OpenSSL::HMAC.digest(@algorithm, @key, payload)
       end
 
       def secure_compare(val_a, val_b)

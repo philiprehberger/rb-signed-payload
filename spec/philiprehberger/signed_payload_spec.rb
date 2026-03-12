@@ -65,5 +65,77 @@ RSpec.describe Philiprehberger::SignedPayload do
         expect { signer.verify(token) }.to raise_error(Philiprehberger::SignedPayload::ExpiredToken)
       end
     end
+
+    describe "algorithm support" do
+      it "round-trips with SHA384" do
+        signer384 = described_class.new(key: key, algorithm: :sha384)
+        token = signer384.sign(data)
+        expect(signer384.verify(token)).to eq(data)
+      end
+
+      it "round-trips with SHA512" do
+        signer512 = described_class.new(key: key, algorithm: :sha512)
+        token = signer512.sign(data)
+        expect(signer512.verify(token)).to eq(data)
+      end
+
+      it "rejects a token signed with sha256 when verified with sha512" do
+        signer256 = described_class.new(key: key, algorithm: :sha256)
+        signer512 = described_class.new(key: key, algorithm: :sha512)
+        token = signer256.sign(data)
+        expect { signer512.verify(token) }.to raise_error(Philiprehberger::SignedPayload::InvalidSignature)
+      end
+    end
+
+    describe "#valid?" do
+      it "returns true for a valid token" do
+        token = signer.sign(data)
+        expect(signer.valid?(token)).to be true
+      end
+
+      it "returns false for a tampered token" do
+        token = signer.sign(data)
+        tampered = "#{token}x"
+        expect(signer.valid?(tampered)).to be false
+      end
+
+      it "returns false for an expired token" do
+        token = signer.sign(data, expires_in: 1)
+        sleep(1.1)
+        expect(signer.valid?(token)).to be false
+      end
+    end
+
+    describe "#decode" do
+      it "returns the payload without verification" do
+        token = signer.sign(data)
+        expect(signer.decode(token)).to eq(data)
+      end
+
+      it "returns the payload even with a different key" do
+        token = signer.sign(data)
+        other = described_class.new(key: "wrong-key")
+        expect(other.decode(token)).to eq(data)
+      end
+    end
+  end
+
+  describe ".valid?" do
+    it "returns true for a valid token" do
+      token = described_class.sign(data, key: key)
+      expect(described_class.valid?(token, key: key)).to be true
+    end
+
+    it "returns false for a tampered token" do
+      token = described_class.sign(data, key: key)
+      expect(described_class.valid?("#{token}x", key: key)).to be false
+    end
+  end
+
+  describe ".decode" do
+    it "returns the payload without verification" do
+      token = described_class.sign(data, key: key)
+      expect(described_class.decode(token)).to eq(data)
+    end
   end
 end

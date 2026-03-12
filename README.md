@@ -3,7 +3,7 @@
 [![Tests](https://github.com/philiprehberger/rb-signed-payload/actions/workflows/ci.yml/badge.svg)](https://github.com/philiprehberger/rb-signed-payload/actions/workflows/ci.yml)
 [![Gem Version](https://badge.fury.io/rb/philiprehberger-signed_payload.svg)](https://rubygems.org/gems/philiprehberger-signed_payload)
 
-Simple cryptographic signing and verification for JSON payloads using HMAC-SHA256.
+Simple cryptographic signing and verification for JSON payloads using HMAC.
 
 ## Requirements
 
@@ -68,6 +68,34 @@ data = signer.verify(token)
 # => { "action" => "approve" }
 ```
 
+### Algorithm selection
+
+```ruby
+# Use SHA-512 instead of the default SHA-256
+token = Philiprehberger::SignedPayload.sign(data, key: key, algorithm: :sha512)
+result = Philiprehberger::SignedPayload.verify(token, key: key, algorithm: :sha512)
+
+# Available algorithms: :sha256 (default), :sha384, :sha512
+signer = Philiprehberger::SignedPayload::Signer.new(key: "my-secret", algorithm: :sha384)
+```
+
+### Quick validation
+
+```ruby
+# Check validity without raising exceptions
+Philiprehberger::SignedPayload.valid?(token, key: key)
+# => true or false
+
+# Decode payload without verifying signature
+Philiprehberger::SignedPayload.decode(token)
+# => { "user_id" => 42, "role" => "admin" }
+
+# Also available on Signer instances
+signer = Philiprehberger::SignedPayload::Signer.new(key: "my-secret")
+signer.valid?(token)   # => true or false
+signer.decode(token)   # => { "user_id" => 42, "role" => "admin" }
+```
+
 ### Error handling
 
 ```ruby
@@ -86,11 +114,15 @@ end
 
 | Method | Description |
 |--------|-------------|
-| `SignedPayload.sign(data, key:, expires_in:)` | Sign data, returns token string |
-| `SignedPayload.verify(token, key:)` | Verify and decode token, returns data hash |
-| `Signer.new(key:)` | Create a signer instance |
+| `SignedPayload.sign(data, key:, expires_in:, algorithm:)` | Sign data, returns token string |
+| `SignedPayload.verify(token, key:, algorithm:)` | Verify and decode token, returns data hash |
+| `SignedPayload.valid?(token, key:)` | Check signature validity, returns boolean |
+| `SignedPayload.decode(token)` | Decode payload without verification |
+| `Signer.new(key:, algorithm:)` | Create a signer instance |
 | `Signer#sign(data, expires_in:)` | Sign data with optional TTL |
 | `Signer#verify(token)` | Verify token or raise error |
+| `Signer#valid?(token)` | Check signature validity, returns boolean |
+| `Signer#decode(token)` | Decode payload without verification |
 
 ## Development
 

@@ -1,17 +1,34 @@
 # frozen_string_literal: true
 
+require "json"
+require "base64"
+
 require_relative "signed_payload/version"
 require_relative "signed_payload/errors"
 require_relative "signed_payload/signer"
 
 module Philiprehberger
   module SignedPayload
-    def self.sign(data, key:, expires_in: nil)
-      Signer.new(key: key).sign(data, expires_in: expires_in)
+    def self.sign(data, key:, algorithm: :sha256, expires_in: nil)
+      Signer.new(key: key, algorithm: algorithm).sign(data, expires_in: expires_in)
     end
 
-    def self.verify(token, key:)
-      Signer.new(key: key).verify(token)
+    def self.verify(token, key:, algorithm: :sha256)
+      Signer.new(key: key, algorithm: algorithm).verify(token)
+    end
+
+    def self.valid?(token, key:, algorithm: :sha256)
+      Signer.new(key: key, algorithm: algorithm).valid?(token)
+    end
+
+    def self.decode(token)
+      encoded, _sig = token.to_s.split(".")
+      raise MalformedToken, "invalid token format" unless token.to_s.split(".").length == 2
+
+      parsed = JSON.parse(Base64.urlsafe_decode64(encoded))
+      parsed["data"]
+    rescue JSON::ParserError
+      raise MalformedToken, "invalid payload encoding"
     end
   end
 end

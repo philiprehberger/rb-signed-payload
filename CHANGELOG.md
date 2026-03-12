@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-03-12
+
+### Added
+- Support for multiple HMAC algorithms: `:sha256` (default), `:sha384`, `:sha512`
+- `algorithm:` parameter on `sign`, `verify`, and `Signer.new`
+- `valid?` method for boolean signature checking without exceptions
+- `decode` method for reading payload without signature verification
+
 ## [0.1.0] - 2026-03-10
 
 ### Added

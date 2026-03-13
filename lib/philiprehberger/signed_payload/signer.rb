@@ -65,6 +65,8 @@ module Philiprehberger
         expected = compute_signature(encoded)
         actual = Base64.urlsafe_decode64(sig)
         raise InvalidSignature, "signature mismatch" unless secure_compare(expected, actual)
+      rescue ArgumentError
+        raise InvalidSignature, "signature mismatch"
       end
 
       def decode_payload(encoded)

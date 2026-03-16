@@ -2,6 +2,7 @@
 
 [![Tests](https://github.com/philiprehberger/rb-signed-payload/actions/workflows/ci.yml/badge.svg)](https://github.com/philiprehberger/rb-signed-payload/actions/workflows/ci.yml)
 [![Gem Version](https://badge.fury.io/rb/philiprehberger-signed_payload.svg)](https://rubygems.org/gems/philiprehberger-signed_payload)
+[![License](https://img.shields.io/github/license/philiprehberger/rb-signed-payload)](LICENSE)
 
 Simple cryptographic signing and verification for JSON payloads using HMAC.
 

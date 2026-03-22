@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-03-22
+
+### Changed
+
+- Expand test coverage to 30+ examples with empty/nil/large payloads, tamper detection, key sensitivity, unsupported algorithm, and decode edge cases
+
 ## [0.2.3] - 2026-03-21
 
 ### Fixed

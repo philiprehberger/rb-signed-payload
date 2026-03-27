@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require "json"
-require "base64"
+require 'json'
+require 'base64'
 
-require_relative "signed_payload/version"
-require_relative "signed_payload/errors"
-require_relative "signed_payload/signer"
+require_relative 'signed_payload/version'
+require_relative 'signed_payload/errors'
+require_relative 'signed_payload/signer'
 
 module Philiprehberger
   module SignedPayload
@@ -22,13 +22,13 @@ module Philiprehberger
     end
 
     def self.decode(token)
-      encoded, _sig = token.to_s.split(".")
-      raise MalformedToken, "invalid token format" unless token.to_s.split(".").length == 2
+      encoded, _sig = token.to_s.split('.')
+      raise MalformedToken, 'invalid token format' unless token.to_s.split('.').length == 2
 
       parsed = JSON.parse(Base64.urlsafe_decode64(encoded))
-      parsed["data"]
+      parsed['data']
     rescue JSON::ParserError
-      raise MalformedToken, "invalid payload encoding"
+      raise MalformedToken, 'invalid payload encoding'
     end
   end
 end

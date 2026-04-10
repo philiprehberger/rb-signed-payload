@@ -46,6 +46,48 @@ module Philiprehberger
         raise MalformedToken, 'invalid payload encoding'
       end
 
+      # Re-sign a verified token with a new expiration.
+      #
+      # @param token [String] the token to refresh
+      # @param expires_in [Integer] new TTL in seconds
+      # @return [String] a new token with the same data and a fresh expiration
+      # @raise [InvalidSignature, ExpiredToken, MalformedToken] if the current token is invalid
+      def refresh(token, expires_in:)
+        data = verify(token)
+        sign(data, expires_in: expires_in)
+      end
+
+      # Check if a token has expired without verifying the signature.
+      #
+      # @param token [String] the token to check
+      # @return [Boolean] true if the token has expired or has no expiration
+      def expired?(token)
+        encoded, _sig = split_token(token)
+        parsed = JSON.parse(Base64.urlsafe_decode64(encoded))
+        return false unless parsed.key?('exp')
+
+        parsed['exp'] <= Time.now.to_i
+      rescue JSON::ParserError
+        raise MalformedToken, 'invalid payload encoding'
+      end
+
+      # Inspect token metadata without verifying the signature.
+      #
+      # @param token [String] the token to inspect
+      # @return [Hash] with :data, :exp (Integer or nil), and :expired (Boolean)
+      def peek(token)
+        encoded, _sig = split_token(token)
+        parsed = JSON.parse(Base64.urlsafe_decode64(encoded))
+        exp = parsed['exp']
+        {
+          data: parsed['data'],
+          exp: exp,
+          expired: exp ? exp <= Time.now.to_i : false
+        }
+      rescue JSON::ParserError
+        raise MalformedToken, 'invalid payload encoding'
+      end
+
       private
 
       def build_payload(data, expires_in)

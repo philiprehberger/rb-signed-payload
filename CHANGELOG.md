@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-04-15
+
+### Fixed
+- Pin `actions/checkout` to `v5` in CI workflow to match the guide
+- Add missing `gem-version` input and require `ruby-version` in bug report template
+- Add reproduction placeholder to bug report template
+- Add `alternatives` textarea and proposed-api placeholder to feature request template
+
 ## [0.3.0] - 2026-04-09
 
 ### Added

@@ -25,6 +25,13 @@ module Philiprehberger
       Signer.new(key: key, algorithm: algorithm).refresh(token, expires_in: expires_in)
     end
 
+    def self.rotate(token, old_key:, new_key:, algorithm: :sha256)
+      old_signer = Signer.new(key: old_key, algorithm: algorithm)
+      data = old_signer.verify(token)
+      exp = old_signer.peek(token)[:exp]
+      Signer.new(key: new_key, algorithm: algorithm).sign_with_exp(data, exp: exp)
+    end
+
     def self.expired?(token)
       Signer.new(key: 'unused').expired?(token)
     end

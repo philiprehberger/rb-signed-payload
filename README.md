@@ -98,6 +98,17 @@ signer.decode(token)   # => { "user_id" => 42, "role" => "admin" }
 refreshed = Philiprehberger::SignedPayload.refresh(token, key: key, expires_in: 7200)
 ```
 
+### Key Rotation
+
+```ruby
+# Verify with the old key and re-sign with a new key, preserving data and expiry
+rotated = Philiprehberger::SignedPayload.rotate(token, old_key: "old-secret", new_key: "new-secret")
+
+# Still verifies the original data under the new key
+Philiprehberger::SignedPayload.verify(rotated, key: "new-secret")
+# => { "user_id" => 42, "role" => "admin" }
+```
+
 ### Token Inspection
 
 ```ruby
@@ -134,6 +145,7 @@ end
 | `SignedPayload.valid?(token, key:)` | Check signature validity, returns boolean |
 | `SignedPayload.decode(token)` | Decode payload without verification |
 | `SignedPayload.refresh(token, key:, expires_in:)` | Re-sign a token with new expiration |
+| `SignedPayload.rotate(token, old_key:, new_key:, algorithm:)` | Re-sign a token with a new key, preserving data and expiry |
 | `SignedPayload.expired?(token)` | Check if token has expired |
 | `SignedPayload.peek(token)` | Inspect token metadata without verification |
 | `Signer.new(key:, algorithm:)` | Create a signer instance |

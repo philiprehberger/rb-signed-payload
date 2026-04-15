@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-04-15
+
+### Added
+- `rotate(token, old_key:, new_key:, algorithm:)` to verify a token with an old key and re-sign with a new key, preserving the original data and expiration
+
 ## [0.3.1] - 2026-04-15
 
 ### Fixed

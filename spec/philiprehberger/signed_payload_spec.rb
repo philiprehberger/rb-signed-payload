@@ -162,6 +162,63 @@ RSpec.describe Philiprehberger::SignedPayload do
     end
   end
 
+  describe '.rotate' do
+    let(:old_key) { 'old-secret-key' }
+    let(:new_key) { 'new-secret-key' }
+
+    it 'returns a token that verifies under the new key' do
+      token = described_class.sign(data, key: old_key)
+      rotated = described_class.rotate(token, old_key: old_key, new_key: new_key)
+      expect(described_class.verify(rotated, key: new_key)).to eq(data)
+    end
+
+    it 'produces a token that does not verify under the old key' do
+      token = described_class.sign(data, key: old_key)
+      rotated = described_class.rotate(token, old_key: old_key, new_key: new_key)
+      expect { described_class.verify(rotated, key: old_key) }.to raise_error(
+        Philiprehberger::SignedPayload::InvalidSignature
+      )
+    end
+
+    it 'preserves the original data' do
+      token = described_class.sign(data, key: old_key)
+      rotated = described_class.rotate(token, old_key: old_key, new_key: new_key)
+      expect(described_class.decode(rotated)).to eq(data)
+    end
+
+    it 'preserves the original expiration timestamp' do
+      token = described_class.sign(data, key: old_key, expires_in: 3600)
+      original_exp = described_class.peek(token)[:exp]
+      rotated = described_class.rotate(token, old_key: old_key, new_key: new_key)
+      expect(described_class.peek(rotated)[:exp]).to eq(original_exp)
+    end
+
+    it 'preserves absence of expiration' do
+      token = described_class.sign(data, key: old_key)
+      rotated = described_class.rotate(token, old_key: old_key, new_key: new_key)
+      expect(described_class.peek(rotated)[:exp]).to be_nil
+    end
+
+    it 'raises InvalidSignature when old_key does not match' do
+      token = described_class.sign(data, key: old_key)
+      expect do
+        described_class.rotate(token, old_key: 'wrong-key', new_key: new_key)
+      end.to raise_error(Philiprehberger::SignedPayload::InvalidSignature)
+    end
+
+    it 'raises MalformedToken for garbage input' do
+      expect do
+        described_class.rotate('notavalidtoken', old_key: old_key, new_key: new_key)
+      end.to raise_error(Philiprehberger::SignedPayload::MalformedToken)
+    end
+
+    it 'supports non-default algorithms' do
+      token = described_class.sign(data, key: old_key, algorithm: :sha512)
+      rotated = described_class.rotate(token, old_key: old_key, new_key: new_key, algorithm: :sha512)
+      expect(described_class.verify(rotated, key: new_key, algorithm: :sha512)).to eq(data)
+    end
+  end
+
   describe '.expired?' do
     it 'returns false for a non-expired token' do
       token = described_class.sign(data, key: key, expires_in: 3600)

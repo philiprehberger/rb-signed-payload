@@ -107,6 +107,12 @@ rotated = Philiprehberger::SignedPayload.rotate(token, old_key: "old-secret", ne
 # Still verifies the original data under the new key
 Philiprehberger::SignedPayload.verify(rotated, key: "new-secret")
 # => { "user_id" => 42, "role" => "admin" }
+
+# Pass an array of candidate keys to verify for zero-downtime secret rotation.
+# Signing still takes exactly one key; verification succeeds if any key matches.
+# Useful while rolling a new signing key alongside an old one.
+Philiprehberger::SignedPayload.verify(token, key: ["new-secret", "old-secret"])
+# => { "user_id" => 42, "role" => "admin" }
 ```
 
 ### Token Inspection
@@ -141,7 +147,7 @@ end
 | Method | Description |
 |--------|-------------|
 | `SignedPayload.sign(data, key:, expires_in:, algorithm:)` | Sign data, returns token string |
-| `SignedPayload.verify(token, key:, algorithm:)` | Verify and decode token, returns data hash |
+| `SignedPayload.verify(token, key:, algorithm:)` | Verify and decode token, returns data hash. `key:` accepts a String or an Array of candidate keys (signature passes if any key matches) |
 | `SignedPayload.valid?(token, key:)` | Check signature validity, returns boolean |
 | `SignedPayload.decode(token)` | Decode payload without verification |
 | `SignedPayload.refresh(token, key:, expires_in:)` | Re-sign a token with new expiration |
@@ -150,7 +156,7 @@ end
 | `SignedPayload.peek(token)` | Inspect token metadata without verification |
 | `Signer.new(key:, algorithm:)` | Create a signer instance |
 | `Signer#sign(data, expires_in:)` | Sign data with optional TTL |
-| `Signer#verify(token)` | Verify token or raise error |
+| `Signer#verify(token, keys:)` | Verify token or raise error. Optional `keys:` array tries each candidate for key rotation |
 | `Signer#valid?(token)` | Check signature validity, returns boolean |
 | `Signer#decode(token)` | Decode payload without verification |
 | `Signer#refresh(token, expires_in:)` | Re-sign a verified token with new TTL |

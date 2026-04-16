@@ -14,11 +14,20 @@ module Philiprehberger
     end
 
     def self.verify(token, key:, algorithm: :sha256)
-      Signer.new(key: key, algorithm: algorithm).verify(token)
+      if key.is_a?(Array)
+        raise ArgumentError, 'no keys provided' if key.empty?
+
+        Signer.new(key: key.first, algorithm: algorithm).verify(token, keys: key)
+      else
+        Signer.new(key: key, algorithm: algorithm).verify(token)
+      end
     end
 
     def self.valid?(token, key:, algorithm: :sha256)
-      Signer.new(key: key, algorithm: algorithm).valid?(token)
+      verify(token, key: key, algorithm: algorithm)
+      true
+    rescue Error
+      false
     end
 
     def self.refresh(token, key:, expires_in:, algorithm: :sha256)

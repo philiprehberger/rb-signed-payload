@@ -336,4 +336,67 @@ RSpec.describe Philiprehberger::SignedPayload do
       )
     end
   end
+
+  describe 'multi-key verify (zero-downtime rotation)' do
+    let(:current_key) { 'current-secret' }
+    let(:old_key) { 'old-secret' }
+    let(:older_key) { 'older-secret' }
+
+    it 'verifies when the correct key is first in the array' do
+      token = described_class.sign(data, key: current_key)
+      expect(described_class.verify(token, key: [current_key, old_key, older_key])).to eq(data)
+    end
+
+    it 'verifies when the correct key is last in the array (old keys before current)' do
+      token = described_class.sign(data, key: current_key)
+      expect(described_class.verify(token, key: [older_key, old_key, current_key])).to eq(data)
+    end
+
+    it 'raises InvalidSignature when none of the keys match' do
+      token = described_class.sign(data, key: current_key)
+      expect do
+        described_class.verify(token, key: %w[wrong-a wrong-b wrong-c])
+      end.to raise_error(Philiprehberger::SignedPayload::InvalidSignature)
+    end
+
+    it 'preserves single-key (String) behavior unchanged' do
+      token = described_class.sign(data, key: current_key)
+      expect(described_class.verify(token, key: current_key)).to eq(data)
+    end
+
+    it 'raises ArgumentError for an empty array of keys' do
+      token = described_class.sign(data, key: current_key)
+      expect { described_class.verify(token, key: []) }.to raise_error(ArgumentError, /no keys provided/)
+    end
+
+    it 'honors the algorithm argument across candidate keys' do
+      token = described_class.sign(data, key: current_key, algorithm: :sha512)
+      expect(
+        described_class.verify(token, key: [old_key, current_key], algorithm: :sha512)
+      ).to eq(data)
+    end
+
+    it 'raises ExpiredToken when a candidate key matches but the token is expired' do
+      token = described_class.sign(data, key: current_key, expires_in: 1)
+      sleep(1.1)
+      expect do
+        described_class.verify(token, key: [old_key, current_key])
+      end.to raise_error(Philiprehberger::SignedPayload::ExpiredToken)
+    end
+
+    describe 'Signer#verify with keys:' do
+      it 'accepts a keys: array on the Signer instance' do
+        signer = Philiprehberger::SignedPayload::Signer.new(key: current_key)
+        token = signer.sign(data)
+        other = Philiprehberger::SignedPayload::Signer.new(key: 'placeholder')
+        expect(other.verify(token, keys: [old_key, current_key])).to eq(data)
+      end
+
+      it 'raises ArgumentError on an empty keys: array' do
+        signer = Philiprehberger::SignedPayload::Signer.new(key: current_key)
+        token = signer.sign(data)
+        expect { signer.verify(token, keys: []) }.to raise_error(ArgumentError, /no keys provided/)
+      end
+    end
+  end
 end

@@ -25,9 +25,21 @@ module Philiprehberger
         "#{encoded}.#{Base64.urlsafe_encode64(signature)}"
       end
 
-      def verify(token)
+      # Verify a token's signature and decode its payload.
+      #
+      # @param token [String] the token to verify
+      # @param keys [Array<String>, nil] optional list of candidate keys to try
+      #   for zero-downtime secret rotation. Signature passes if any key
+      #   validates. When nil (default), the key supplied at construction is
+      #   used.
+      # @return [Object] the decoded payload data
+      # @raise [ArgumentError] if keys is an empty array
+      # @raise [InvalidSignature, ExpiredToken, MalformedToken] on failure
+      def verify(token, keys: nil)
+        raise ArgumentError, 'no keys provided' if keys.is_a?(Array) && keys.empty?
+
         encoded, sig = split_token(token)
-        verify_signature!(encoded, sig)
+        verify_signature!(encoded, sig, keys: keys)
         decode_payload(encoded)
       end
 
@@ -118,10 +130,12 @@ module Philiprehberger
         parts
       end
 
-      def verify_signature!(encoded, sig)
-        expected = compute_signature(encoded)
+      def verify_signature!(encoded, sig, keys: nil)
         actual = Base64.urlsafe_decode64(sig)
-        raise InvalidSignature, 'signature mismatch' unless secure_compare(expected, actual)
+        candidates = keys.nil? ? [@key] : keys
+        raise InvalidSignature, 'signature mismatch' unless candidates.any? do |candidate|
+          secure_compare(compute_signature_with(candidate, encoded), actual)
+        end
       rescue ArgumentError
         raise InvalidSignature, 'signature mismatch'
       end
@@ -148,7 +162,11 @@ module Philiprehberger
       end
 
       def compute_signature(payload)
-        OpenSSL::HMAC.digest(@algorithm, @key, payload)
+        compute_signature_with(@key, payload)
+      end
+
+      def compute_signature_with(key, payload)
+        OpenSSL::HMAC.digest(@algorithm, key, payload)
       end
 
       def secure_compare(val_a, val_b)

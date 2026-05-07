@@ -237,6 +237,59 @@ RSpec.describe Philiprehberger::SignedPayload do
     end
   end
 
+  describe '.expires_at' do
+    it 'returns a Time approximately equal to now plus expires_in' do
+      token = described_class.sign(data, key: key, expires_in: 60)
+      expect(described_class.expires_at(token)).to be_a(Time)
+      expect(described_class.expires_at(token)).to be_within(5.0).of(Time.now + 60)
+    end
+
+    it 'returns nil for a token with no expiration' do
+      token = described_class.sign(data, key: key)
+      expect(described_class.expires_at(token)).to be_nil
+    end
+
+    it 'raises MalformedToken for garbage input' do
+      expect { described_class.expires_at('garbage') }.to raise_error(
+        Philiprehberger::SignedPayload::MalformedToken
+      )
+    end
+
+    it 'raises MalformedToken for a non-string token' do
+      expect { described_class.expires_at(12_345) }.to raise_error(
+        Philiprehberger::SignedPayload::MalformedToken
+      )
+    end
+
+    it 'agrees with .expired? — when expires_at <= now, expired? is true' do
+      token = described_class.sign(data, key: key, expires_in: 1)
+      sleep(1.1)
+      expect(described_class.expires_at(token)).to be <= Time.now
+      expect(described_class.expired?(token)).to be true
+    end
+
+    describe 'Signer#expires_at' do
+      let(:signer) { Philiprehberger::SignedPayload::Signer.new(key: key) }
+
+      it 'returns a Time approximately equal to now plus expires_in' do
+        token = signer.sign(data, expires_in: 60)
+        expect(signer.expires_at(token)).to be_a(Time)
+        expect(signer.expires_at(token)).to be_within(5.0).of(Time.now + 60)
+      end
+
+      it 'returns nil for a token with no expiration' do
+        token = signer.sign(data)
+        expect(signer.expires_at(token)).to be_nil
+      end
+
+      it 'raises MalformedToken for garbage input' do
+        expect { signer.expires_at('garbage') }.to raise_error(
+          Philiprehberger::SignedPayload::MalformedToken
+        )
+      end
+    end
+  end
+
   describe '.peek' do
     it 'returns data and expiration metadata' do
       token = described_class.sign(data, key: key, expires_in: 3600)

@@ -49,6 +49,10 @@ module Philiprehberger
       Signer.new(key: 'unused').peek(token)
     end
 
+    def self.expires_at(token)
+      Signer.new(key: 'unused').expires_at(token)
+    end
+
     def self.decode(token)
       encoded, _sig = token.to_s.split('.')
       raise MalformedToken, 'invalid token format' unless token.to_s.split('.').length == 2

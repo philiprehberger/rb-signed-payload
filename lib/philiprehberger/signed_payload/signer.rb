@@ -98,6 +98,19 @@ module Philiprehberger
         raise MalformedToken, 'invalid payload encoding'
       end
 
+      # Return the expiration time of a token without verifying the signature.
+      #
+      # @param token [String] the token to inspect
+      # @return [Time, nil] the expiration time, or nil if the token has no expiration
+      # @raise [MalformedToken] if the token is structurally invalid
+      def expires_at(token)
+        encoded, _sig = split_token(token)
+        parsed = JSON.parse(Base64.urlsafe_decode64(encoded))
+        parsed.key?('exp') ? Time.at(parsed['exp']) : nil
+      rescue JSON::ParserError
+        raise MalformedToken, 'invalid payload encoding'
+      end
+
       # Inspect token metadata without verifying the signature.
       #
       # @param token [String] the token to inspect

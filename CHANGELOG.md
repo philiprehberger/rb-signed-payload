@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-05-07
+
+### Added
+- `SignedPayload.expires_at(token)` and `Signer#expires_at(token)` — return the token's expiration `Time`, or `nil` if no expiration was set. Does not verify the signature.
+
+### Changed
+- CI workflow: `actions/checkout@v5` → `@v6` to match the rest of the Ruby gems.
+
 ## [0.5.0] - 2026-04-16
 
 ### Added

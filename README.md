@@ -128,6 +128,14 @@ info[:exp]      # => 1712700000 (Unix timestamp, or nil)
 info[:expired]  # => false
 ```
 
+### Expiration Inspection
+
+```ruby
+token = Philiprehberger::SignedPayload.sign({ user_id: 1 }, key: 'secret', expires_in: 3600)
+Philiprehberger::SignedPayload.expires_at(token)
+# => 2026-05-07 04:38:24 +0000
+```
+
 ### Error handling
 
 ```ruby
@@ -154,6 +162,7 @@ end
 | `SignedPayload.rotate(token, old_key:, new_key:, algorithm:)` | Re-sign a token with a new key, preserving data and expiry |
 | `SignedPayload.expired?(token)` | Check if token has expired |
 | `SignedPayload.peek(token)` | Inspect token metadata without verification |
+| `SignedPayload.expires_at(token)` | Returns the expiration Time, or nil if no expiration was set |
 | `Signer.new(key:, algorithm:)` | Create a signer instance |
 | `Signer#sign(data, expires_in:)` | Sign data with optional TTL |
 | `Signer#verify(token, keys:)` | Verify token or raise error. Optional `keys:` array tries each candidate for key rotation |
@@ -162,6 +171,7 @@ end
 | `Signer#refresh(token, expires_in:)` | Re-sign a verified token with new TTL |
 | `Signer#expired?(token)` | Check if token has expired |
 | `Signer#peek(token)` | Inspect data, exp, and expired status |
+| `Signer#expires_at(token)` | Returns the expiration Time, or nil if no expiration was set |
 
 ## Development
 
